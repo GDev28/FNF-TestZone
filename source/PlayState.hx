@@ -277,10 +277,15 @@ class PlayState extends MusicBeatState
 	private var keysArray:Array<Dynamic>;
 
 	//tests
-	var test:FlxSprite;
-	public var dashmana:Int;
+	public static var test:FlxSprite;
+	public var dashmana:Int = 0;
 	var ready:Bool;
-	var bullet:FlxSprite;
+	var bulletamount:Int;
+	var dodgecooldown:Float = 1.50;
+	var dodgetime:Float = 0.25;
+	var dodging:Bool;
+	var dodgea:Bool;
+	var alert:FlxSprite;
 
 	override public function create()
 	{
@@ -1042,6 +1047,9 @@ class PlayState extends MusicBeatState
 		if(ClientPrefs.downScroll) {
 			botplayTxt.y = timeBarBG.y - 78;
 		}
+
+		dashmana = 0;
+		
 		if(ClientPrefs.downScroll == true){
 			test = new FlxSprite(1049, 0).loadGraphic(Paths.image('cardfull'));
 			test.angle = 180;
@@ -1062,12 +1070,15 @@ class PlayState extends MusicBeatState
 			test.animation.play('idle');
 		}
 
-		bullet = new FlxSprite(235, 669).loadGraphic(Paths.image('bullet_notes'));
-		bullet.angle = 45;
-		bullet.scale.y = 1;
-		bullet.scale.x = 1;
+		alert = new FlxSprite(512, 232).loadGraphic(Paths.image('attack_alert'));
+		alert.setGraphicSize(Std.int(alert.width * 1.5));
+		alert.x = 532;
+		alert.y = 232;
+		alert.frames = Paths.getSparrowAtlas('attack_alert');
+		alert.animation.addByPrefix('warn', 'kb_attack_animation_alert', 50, false);
+		alert.visible = false;
 
-		add(bullet);
+		add(alert);
 		add(test);
 
 		strumLineNotes.cameras = [camHUD];
@@ -1083,7 +1094,7 @@ class PlayState extends MusicBeatState
 		timeTxt.cameras = [camHUD];
 		doof.cameras = [camHUD];
 		test.cameras = [camHUD];
-		bullet.cameras = [camHUD];
+		alert.cameras = [camHUD];
 
 		// if (SONG.song == 'South')
 		// FlxG.camera.alpha = 0.7;
@@ -1215,6 +1226,8 @@ class PlayState extends MusicBeatState
 		Conductor.safeZoneOffset = (ClientPrefs.safeFrames / 60) * 1000;
 		callOnLuas('onCreatePost', []);
 		
+		dodgea = true;
+
 		super.create();
 
 		Paths.clearUnusedMemory();
@@ -2351,57 +2364,33 @@ class PlayState extends MusicBeatState
 		}
 
 		//Tests gototest()
-		
-		if(controls.UI_UP_P){
-			bullet.y -= 10;
-			health = 2;
-			trace(bullet.y);
-		}
-		if(controls.UI_DOWN_P){
-			bullet.y += 10;
-			health = 2;
-			trace(bullet.y);
-		}
-		if(controls.UI_LEFT_P){
-			bullet.x -= 10;
-			health = 2;
-			trace(bullet.x);
-		}
-		if(controls.UI_RIGHT_P){
-			bullet.x += 10;
-			health = 2;
-			trace(bullet.x);
-		}
-		if(controls.ACCEPT){
-			bullet.scale.y -= 0.1;
-			bullet.scale.x -= 0.1;
-			trace(bullet.scale.y);
-			trace(bullet.scale.x);
+
+		if(controls.UI_UP_P || controls.UI_DOWN_P || controls.UI_LEFT_P || controls.UI_RIGHT_P){
+			trace(dashmana);
 		}
 
-
-
-
-		if(dashmana < 100 && ClientPrefs.downScroll == true){
+		if(dashmana < 100 && ClientPrefs.downScroll){
 			test.offset.y = 135 - (dashmana * 1.35);
 			test.animation.play('idle');
 		}
 		
-			else if(dashmana < 100 && ClientPrefs.downScroll == false){
-				test.offset.y = -35 + (dashmana * 1.35);
-				test.animation.play('idle');
-			}
+		else if(dashmana < 100 && !ClientPrefs.downScroll){
+			test.offset.y = -35 + (dashmana * 1.35);
+			test.animation.play('idle');
+		}
 		if(dashmana >= 100 && ready == false){
+			test.offset.y = -35 + (100 * 1.35);
 			test.animation.play('cardanim');
 			new FlxTimer().start(0.75, function(tmr:FlxTimer){
 			ready = true;
 		});
 			
 		}
-		if(ready == true){
+		if(ready){
 			test.animation.play('filled');
+			test.offset.y = -35 + (100 * 1.35);
 		}
-		if(controls.ACCEPT && ClientPrefs.downScroll == true && ready == true){
+		if(controls.ACCEPT && ClientPrefs.downScroll && ready){
 			FlxTween.tween(test, {y: -100}, 1, {ease: FlxEase.backIn});
 			new FlxTimer().start(1.05, function(tmr:FlxTimer){
 				test.y = 0;
@@ -2410,15 +2399,38 @@ class PlayState extends MusicBeatState
 				ready = false;
 			});
 		}
-		else if(controls.ACCEPT && ClientPrefs.downScroll == false && ready == true){
+		else if(controls.ACCEPT && !ClientPrefs.downScroll && ready){
 			FlxTween.tween(test, {y: 800}, 1, {ease: FlxEase.backIn});
 			new FlxTimer().start(1.05, function(tmr:FlxTimer){
 				test.y = 669;
 				test.offset.y = -35;
-				dashmana = 0 ;
 				ready = false;
+				dashmana = 0;
 			});
 		}
+
+		
+		//Bullet
+		if(controls.ACCEPT && !dodging && ready && dodgea){
+			dodging = true;
+			boyfriend.debugMode = true;
+			boyfriend.holdTimer = 0.75;
+
+			new FlxTimer().start(dodgetime, function(tmr:FlxTimer){
+				dodging = false;
+				boyfriend.dance();
+			});
+			new FlxTimer().start(0.7, function(tmr:FlxTimer){
+				boyfriend.debugMode = false;
+			});
+			new FlxTimer().start(dodgecooldown, function(tmr:FlxTimer){
+				dodgea = true;
+			});
+		}
+		if(dodging){
+			boyfriend.playAnim('dodge');
+		}
+		
 
 
 		if(!inCutscene) {
@@ -2433,7 +2445,6 @@ class PlayState extends MusicBeatState
 				boyfriendIdleTime = 0;
 			}
 		}
-
 		super.update(elapsed);
 
 		if(ratingName == '?') {
@@ -2684,6 +2695,7 @@ class PlayState extends MusicBeatState
 							swagRect.height = (center - daNote.y) / daNote.scale.y;
 							swagRect.y = daNote.frameHeight - swagRect.height;
 
+
 							daNote.clipRect = swagRect;
 						}
 					}
@@ -2779,6 +2791,29 @@ class PlayState extends MusicBeatState
 			i(elapsed);
 		}
 	}
+
+	function Bulletwarning(ablewarn:Bool = false){
+		if(ablewarn){
+			alert.animation.play('warn');
+			FlxG.sound.play(Paths.sound('warn'));
+		}
+	}
+
+	function dodgemechanic(ablestrike:Bool = false){
+		FlxG.sound.play(Paths.sound('bullet'));
+		new FlxTimer().start(0.1,function (tmr:FlxTimer){
+			if(!dodging){
+				FlxG.cameras.flash(FlxColor.RED, 1);
+				health = -100;
+			}
+			else{
+				FlxG.cameras.shake(0.05, 0.25);
+			}
+		});
+
+
+	}
+
 
 	function openChartEditor()
 	{
@@ -3193,6 +3228,18 @@ class PlayState extends MusicBeatState
 						}
 					});
 				}
+			case 'Shooting Madness':
+				var bullettime:Float = Std.parseFloat(value1);
+				alert.visible = true;
+				Bulletwarning(true);
+					new FlxTimer().start((bullettime), function(tmr:FlxTimer){
+						Bulletwarning(true);
+						new FlxTimer().start((0.25), function(tmr:FlxTimer){
+							dodgemechanic(true);
+							alert.visible = false;
+						});
+					});
+			
 		}
 		callOnLuas('onEvent', [eventName, value1, value2]);
 	}
@@ -4005,6 +4052,7 @@ class PlayState extends MusicBeatState
 
 	function goodNoteHit(note:Note):Void
 	{
+		
 		if (!note.wasGoodHit)
 		{
 			if(cpuControlled && (note.ignoreNote || note.hitCausesMiss)) return;
@@ -4021,6 +4069,7 @@ class PlayState extends MusicBeatState
 							boyfriend.playAnim('hurt', true);
 							boyfriend.specialAnim = true;
 						}
+					return;
 				}
 				
 				note.wasGoodHit = true;
@@ -4032,6 +4081,7 @@ class PlayState extends MusicBeatState
 				}
 				return;
 			}
+			
 
 			if (!note.isSustainNote)
 			{
@@ -4040,8 +4090,28 @@ class PlayState extends MusicBeatState
 				if(combo > 9999) combo = 9999;
 			}
 			health += note.hitHealth * healthGain;
-			dashmana += 1;
+
+			switch(note.noteType) {
+				case 'Hurt Note': //Hurt note
+				if(boyfriend.animation.getByName('hurt') != null) {
+					boyfriend.playAnim('hurt', true);
+					boyfriend.specialAnim = true;
+				}
+				return;
+				
+				case 'Mana Note': 
+					dashmana += 100;
+					health = 2;
+					note.kill();
+					notes.remove(note, true);
+					note.destroy();
+				return;
+				
+			}
 			
+
+			dashmana += 1;
+
 
 			if(!note.noAnimation) {
 				var daAlt = '';
@@ -4086,6 +4156,7 @@ class PlayState extends MusicBeatState
 				}
 			}
 
+			
 			if(cpuControlled) {
 				var time:Float = 0.15;
 				if(note.isSustainNote && !note.animation.curAnim.name.endsWith('end')) {

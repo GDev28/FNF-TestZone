@@ -34,7 +34,8 @@ class MainMenuState extends MusicBeatState
 	var menuItems:FlxTypedGroup<FlxSprite>;
 	private var camGame:FlxCamera;
 	private var camAchievement:FlxCamera;
-	
+	var menuItem:FlxSprite;
+
 	var optionShit:Array<String> = [
 		'story_mode',
 		'freeplay',
@@ -107,7 +108,7 @@ class MainMenuState extends MusicBeatState
 		}*/
 
 			var offset:Float = 108 - (Math.max(optionShit.length, 4) - 4) * 80;
-			var menuItem:FlxSprite = new FlxSprite(100,200);
+			menuItem = new FlxSprite(100,200);
 			menuItem.scale.x = scale;
 			menuItem.scale.y = scale;
 			menuItem.frames = Paths.getSparrowAtlas('mainmenu/menu_' + optionShit[0]);
@@ -124,7 +125,7 @@ class MainMenuState extends MusicBeatState
 			menuItem.updateHitbox();
 		
 			var offset:Float = 108 - (Math.max(optionShit.length, 4) - 4) * 80;
-			var menuItem:FlxSprite = new FlxSprite(600,200);
+			menuItem= new FlxSprite(600,200);
 			menuItem.scale.x = scale;
 			menuItem.scale.y = scale;
 			menuItem.frames = Paths.getSparrowAtlas('mainmenu/menu_' + optionShit[1]);
@@ -142,7 +143,7 @@ class MainMenuState extends MusicBeatState
 			
 			
 			var offset:Float = 108 - (Math.max(optionShit.length, 4) - 4) * 80;
-			var menuItem:FlxSprite = new FlxSprite(1000,200);
+			menuItem = new FlxSprite(1000,200);
 			menuItem.scale.x = scale;
 			menuItem.scale.y = scale;
 			menuItem.frames = Paths.getSparrowAtlas('mainmenu/menu_' + optionShit[2]);
@@ -160,7 +161,7 @@ class MainMenuState extends MusicBeatState
 
 			
 			var offset:Float = 108 - (Math.max(optionShit.length, 4) - 4) * 80;
-			var menuItem:FlxSprite = new FlxSprite(150,500);
+			menuItem = new FlxSprite(150,500);
 			menuItem.scale.x = scale;
 			menuItem.scale.y = scale;
 			menuItem.frames = Paths.getSparrowAtlas('mainmenu/menu_' + optionShit[3]);
@@ -177,7 +178,7 @@ class MainMenuState extends MusicBeatState
 			menuItem.updateHitbox();
 
 			var offset:Float = 108 - (Math.max(optionShit.length, 4) - 4) * 80;
-			var menuItem:FlxSprite = new FlxSprite(1000,500);
+			menuItem = new FlxSprite(1000,500);
 			menuItem.scale.x = scale;
 			menuItem.scale.y = scale;
 			menuItem.frames = Paths.getSparrowAtlas('mainmenu/menu_' + optionShit[5]);
@@ -194,7 +195,7 @@ class MainMenuState extends MusicBeatState
 			menuItem.updateHitbox();
 
 			var offset:Float = 108 - (Math.max(optionShit.length, 4) - 4) * 80;
-			var menuItem:FlxSprite = new FlxSprite(600,500);
+			menuItem = new FlxSprite(600,500);
 			menuItem.scale.x = scale;
 			menuItem.scale.y = scale;
 			menuItem.frames = Paths.getSparrowAtlas('mainmenu/menu_' + optionShit[4]);
@@ -212,10 +213,10 @@ class MainMenuState extends MusicBeatState
 
 		//Test Button
 			var offset:Float = 108 - (Math.max(optionShit.length, 4) - 4) * 80;
-			var menuItem:FlxSprite = new FlxSprite(100,100);
+			menuItem = new FlxSprite(100,100);
 			menuItem.scale.x = scale;
 			menuItem.scale.y = scale;
-			menuItem.frames = Paths.getSparrowAtlas('images/sick.png');
+			menuItem.frames = Paths.getSparrowAtlas('images/sick');
 			menuItem.animation.addByPrefix('idle', optionShit[6] + " basic", 24);
 			menuItem.animation.addByPrefix('selected', optionShit[6] + " white", 24);
 			menuItem.animation.play('idle');
@@ -228,6 +229,7 @@ class MainMenuState extends MusicBeatState
 			//menuItem.setGraphicSize(Std.int(menuItem.width * 0.58));
 			menuItem.updateHitbox();
 
+				
 
 
 		FlxG.camera.follow(camFollowPos, null, 1);
@@ -344,6 +346,12 @@ class MainMenuState extends MusicBeatState
 				trace(currentItem);
 				changeItem(1);	
 				currentItem = 6;
+
+			}
+
+			if(controls.UI_UP_P){
+				menuItem.ID = 1;
+				menuItem.kill();
 
 			}
 
